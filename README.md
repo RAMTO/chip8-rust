@@ -7,3 +7,9 @@ CHIP-8 is a simple, interpreted programming language primarily used to write vid
 ```
 cargo run
 ```
+
+## How to run tests
+
+```
+cargo test
+```

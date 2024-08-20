@@ -73,3 +73,58 @@ fn main() {
         chip8.cycle();
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn can_init_chip8() {
+        let chip8 = Chip8::init();
+
+        assert_eq!(chip8.memory, [0; 4096]);
+        assert_eq!(chip8.pc, 0x200);
+        assert_eq!(chip8.screen, [0; 64 * 32]);
+        assert_eq!(chip8.stack, [0; 16]);
+        assert_eq!(chip8.sp, 0);
+    }
+
+    #[test]
+    fn can_fetch_opcode() {
+        let mut chip8 = Chip8::init();
+        chip8.memory[0x200] = 0xAB;
+        chip8.memory[0x201] = 0xCD;
+
+        assert_eq!(chip8.fetch(), 0xABCD);
+    }
+
+    #[test]
+    fn can_jump_to_address() {
+        let mut chip8 = Chip8::init();
+        chip8.jump_to_address(0x1234);
+
+        assert_eq!(chip8.pc, 0x1234);
+    }
+
+    #[test]
+    fn can_return_from_subroutine() {
+        let mut chip8 = Chip8::init();
+        chip8.stack[0] = 0x1234;
+        chip8.sp = 1;
+
+        chip8.return_from_subroutine();
+
+        assert_eq!(chip8.pc, 0x1234);
+        assert_eq!(chip8.sp, 0);
+    }
+
+    #[test]
+    fn can_clear_screen() {
+        let mut chip8 = Chip8::init();
+        chip8.screen[0] = 1;
+
+        chip8.clear_screen();
+
+        assert_eq!(chip8.screen, [0; 64 * 32]);
+    }
+}

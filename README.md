@@ -13,3 +13,15 @@ cargo run
 ```
 cargo test
 ```
+
+## How to run with Docker
+
+```
+docker build -t chip8_emulator .
+```
+
+and
+
+```
+docker run --rm chip8_emulator
+```

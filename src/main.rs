@@ -3,6 +3,7 @@ struct Chip8 {
     pc: u16,
     screen: [u8; 64 * 32],
     stack: [u16; 16],
+    i: u16,
     sp: u8,
 }
 
@@ -14,6 +15,7 @@ impl Chip8 {
             screen: [0; 64 * 32],
             stack: [0; 16],
             sp: 0,
+            i: 0,
         }
     }
 
@@ -36,6 +38,7 @@ impl Chip8 {
 
     fn decode_and_execute(&mut self, opcode: u16) {
         self.pc += 2;
+        println!("Executing opcode: 0x{:04X}", opcode);
 
         match opcode & 0xF000 {
             0x0000 => match opcode & 0x00FF {
@@ -44,9 +47,13 @@ impl Chip8 {
                 _ => println!("Unknown opcode [0x0000]: 0x{:04X}", opcode),
             },
             0x1000 => self.jump_to_address(opcode & 0x0FFF),
-            // Other opcodes go here
+            0xA000 => self.set_index_register(opcode & 0x0FFF),
             _ => println!("Unknown opcode: 0x{:04X}", opcode),
         }
+    }
+
+    fn set_index_register(&mut self, value: u16) {
+        self.i = value;
     }
 
     fn clear_screen(&mut self) {

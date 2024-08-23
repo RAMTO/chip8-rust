@@ -127,4 +127,27 @@ mod tests {
 
         assert_eq!(chip8.screen, [0; 64 * 32]);
     }
+
+    #[test]
+    fn can_load_rom() {
+        let mut chip8 = Chip8::init();
+        let rom = [0xAB, 0xCD, 0xEF];
+
+        chip8.load_rom(&rom);
+
+        assert_eq!(chip8.memory[0x200], 0xAB);
+        assert_eq!(chip8.memory[0x201], 0xCD);
+        assert_eq!(chip8.memory[0x202], 0xEF);
+    }
+
+    #[test]
+    fn can_cycle() {
+        let mut chip8 = Chip8::init();
+        chip8.memory[0x200] = 0x12;
+        chip8.memory[0x201] = 0x34;
+
+        chip8.cycle();
+
+        assert_eq!(chip8.pc, 0x234);
+    }
 }

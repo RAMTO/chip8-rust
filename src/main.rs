@@ -170,4 +170,12 @@ mod tests {
 
         assert_eq!(chip8.pc, 0x234);
     }
+
+    #[test]
+    fn can_set_index_register() {
+        let mut chip8 = Chip8::init();
+        chip8.set_index_register(0x1234);
+
+        assert_eq!(chip8.i, 0x1234);
+    }
 }

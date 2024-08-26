@@ -1,3 +1,5 @@
+use std::process;
+
 struct Chip8 {
     memory: [u8; 4096],
     pc: u16,
@@ -23,6 +25,7 @@ impl Chip8 {
         for (i, &byte) in rom.iter().enumerate() {
             self.memory[0x200 + i] = byte;
         }
+        println!("🧠 Rom loaded into memory");
     }
 
     fn cycle(&mut self) {
@@ -38,12 +41,13 @@ impl Chip8 {
 
     fn decode_and_execute(&mut self, opcode: u16) {
         self.pc += 2;
-        println!("Executing opcode: 0x{:04X}", opcode);
+        println!("⚙️ Executing opcode: 0x{:04X}", opcode);
 
         match opcode & 0xF000 {
             0x0000 => match opcode & 0x00FF {
                 0x00E0 => self.clear_screen(),
                 0x00EE => self.return_from_subroutine(),
+                0x00DF => self.exit_program(),
                 _ => println!("Unknown opcode [0x0000]: 0x{:04X}", opcode),
             },
             0x1000 => self.jump_to_address(opcode & 0x0FFF),
@@ -52,21 +56,30 @@ impl Chip8 {
         }
     }
 
-    fn set_index_register(&mut self, value: u16) {
-        self.i = value;
-    }
-
     fn clear_screen(&mut self) {
+        println!("➡️ Clearing the screen");
         self.screen = [0; 64 * 32];
     }
 
     fn return_from_subroutine(&mut self) {
+        println!("➡️ Returning from subroutine");
         self.sp -= 1;
         self.pc = self.stack[self.sp as usize];
     }
 
     fn jump_to_address(&mut self, address: u16) {
+        println!("➡️ Jumping to address: 0x{:04X}", address);
         self.pc = address;
+    }
+
+    fn set_index_register(&mut self, value: u16) {
+        println!("➡️ Setting I to 0x{:04X}", value);
+        self.i = value;
+    }
+
+    fn exit_program(&mut self) {
+        println!("➡️ Exiting the program");
+        process::exit(0);
     }
 }
 

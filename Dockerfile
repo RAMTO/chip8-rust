@@ -21,7 +21,7 @@ RUN cargo build --release
 FROM rust:latest
 
 # Copy the compiled binary from the builder image
-COPY --from=builder /usr/src/app/target/release/chip8_emulator /usr/local/bin/chip8_emulator
+COPY --from=builder /usr/src/app/target/release/chip8-rust /usr/local/bin/chip8-rust
 
 # Set the startup command to run the binary
-CMD ["sh", "-c", "chip8_emulator && tail -f /dev/null"]
+CMD ["sh", "-c", "chip8-rust && tail -f /dev/null"]

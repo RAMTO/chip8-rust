@@ -35,11 +35,11 @@ cargo test
 ## How to run with Docker
 
 ```
-docker build -t chip8_emulator .
+docker build -t chip8-rust .
 ```
 
 and
 
 ```
-docker run --rm chip8_emulator
+docker run --rm chip8-rust
 ```

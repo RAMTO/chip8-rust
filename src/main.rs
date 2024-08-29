@@ -7,6 +7,7 @@ struct Chip8 {
     stack: [u16; 16],
     i: u16,
     sp: u8,
+    registers: [u8; 16],
 }
 
 impl Chip8 {
@@ -18,6 +19,7 @@ impl Chip8 {
             stack: [0; 16],
             sp: 0,
             i: 0,
+            registers: [0; 16],
         }
     }
 
@@ -51,6 +53,15 @@ impl Chip8 {
                 _ => println!("Unknown opcode [0x0000]: 0x{:04X}", opcode),
             },
             0x1000 => self.jump_to_address(opcode & 0x0FFF),
+            0x6000 => self.set_register((opcode & 0x0F00) >> 8, (opcode & 0x00FF) as u8),
+            0x7000 => self.add_to_register((opcode & 0x0F00) >> 8, (opcode & 0x00FF) as u8),
+            0x8000 => match opcode & 0x000F {
+                0x0000 => {
+                    self.set_register_to_register((opcode & 0x0F00) >> 8, (opcode & 0x00F0) >> 4)
+                }
+                0x0004 => self.add_registers((opcode & 0x0F00) >> 8, (opcode & 0x00F0) >> 4),
+                _ => println!("Unknown opcode [0x8000]: 0x{:04X}", opcode),
+            },
             0xA000 => self.set_index_register(opcode & 0x0FFF),
             _ => println!("Unknown opcode: 0x{:04X}", opcode),
         }
@@ -80,6 +91,33 @@ impl Chip8 {
     fn exit_program(&mut self) {
         println!("➡️ Exiting the program");
         process::exit(0);
+    }
+
+    // New methods for register operations
+    fn set_register(&mut self, register: u16, value: u8) {
+        println!("➡️ Setting register V{:X} to 0x{:02X}", register, value);
+        self.registers[register as usize] = value;
+    }
+
+    fn add_to_register(&mut self, register: u16, value: u8) {
+        println!("➡️ Adding 0x{:02X} to register V{:X}", value, register);
+        self.registers[register as usize] = self.registers[register as usize].wrapping_add(value);
+    }
+
+    fn set_register_to_register(&mut self, target: u16, source: u16) {
+        println!(
+            "➡️ Setting register V{:X} to the value of V{:X}",
+            target, source
+        );
+        self.registers[target as usize] = self.registers[source as usize];
+    }
+
+    fn add_registers(&mut self, target: u16, source: u16) {
+        println!("➡️ Adding register V{:X} to V{:X}", source, target);
+        let (result, overflow) =
+            self.registers[target as usize].overflowing_add(self.registers[source as usize]);
+        self.registers[target as usize] = result;
+        self.registers[0xF] = if overflow { 1 } else { 0 };
     }
 }
 
@@ -177,5 +215,44 @@ mod tests {
         chip8.set_index_register(0x1234);
 
         assert_eq!(chip8.i, 0x1234);
+    }
+
+    #[test]
+    fn can_set_register() {
+        let mut chip8 = Chip8::init();
+        chip8.set_register(0x5, 0xAB);
+        assert_eq!(chip8.registers[0x5], 0xAB);
+    }
+
+    #[test]
+    fn can_add_to_register() {
+        let mut chip8 = Chip8::init();
+        chip8.registers[0x3] = 0x10;
+        chip8.add_to_register(0x3, 0x05);
+        assert_eq!(chip8.registers[0x3], 0x15);
+    }
+
+    #[test]
+    fn can_set_register_to_register() {
+        let mut chip8 = Chip8::init();
+        chip8.registers[0x2] = 0xCD;
+        chip8.set_register_to_register(0x4, 0x2);
+        assert_eq!(chip8.registers[0x4], 0xCD);
+    }
+
+    #[test]
+    fn can_add_registers() {
+        let mut chip8 = Chip8::init();
+        chip8.registers[0x1] = 0x50;
+        chip8.registers[0x2] = 0x30;
+        chip8.add_registers(0x1, 0x2);
+        assert_eq!(chip8.registers[0x1], 0x80);
+        assert_eq!(chip8.registers[0xF], 0);
+
+        chip8.registers[0x1] = 0xFF;
+        chip8.registers[0x2] = 0x01;
+        chip8.add_registers(0x1, 0x2);
+        assert_eq!(chip8.registers[0x1], 0x00);
+        assert_eq!(chip8.registers[0xF], 1);
     }
 }
